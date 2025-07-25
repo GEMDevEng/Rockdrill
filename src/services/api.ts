@@ -6,7 +6,7 @@ import {
 import { API_ENDPOINTS } from '../constants';
 
 // Base API configuration
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 const API_VERSION = 'v1';
 
 class ApiError extends Error {
