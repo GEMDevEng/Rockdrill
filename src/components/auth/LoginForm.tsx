@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, AlertCircle, Info } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Card } from '../ui/Card';
 import { useApp, useNotifications } from '../../contexts/AppContext';
 import { api, ApiError } from '../../services/api';
+import { isDemoMode } from '../../services/mockApi';
 
 interface LoginFormProps {
   onSwitchToRegister: () => void;
@@ -91,6 +92,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({
     }
   };
 
+  const handleDemoLogin = () => {
+    setFormData({
+      email: 'demo@rockdrill.com',
+      password: 'demo123'
+    });
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <div className="p-8">
@@ -98,6 +106,35 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
           <p className="text-gray-600">Sign in to your Rockdrill account</p>
         </div>
+
+        {isDemoMode() && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start space-x-2">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-blue-800 text-sm font-medium mb-1">Demo Mode</p>
+                <p className="text-blue-700 text-sm">
+                  Use these credentials to explore the platform:
+                </p>
+                <div className="mt-2 text-sm text-blue-700 font-mono bg-blue-100 p-2 rounded">
+                  <div>Email: demo@rockdrill.com</div>
+                  <div>Password: demo123</div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 underline"
+                  disabled={loading}
+                >
+                  Fill demo credentials
+                </button>
+                <p className="text-blue-600 text-xs mt-2">
+                  Or register with any email to create a demo account.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {errors.general && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
@@ -182,6 +219,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
           <p className="text-gray-600">
             Don't have an account?{' '}
             <button
+              type="button"
               onClick={onSwitchToRegister}
               className="text-blue-600 hover:text-blue-500 font-medium"
               disabled={loading}

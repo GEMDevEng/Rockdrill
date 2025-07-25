@@ -1,12 +1,13 @@
-import { 
+import {
   Lead, Campaign, EmailTemplate, User, AnalyticsData,
   SearchFilters, PaginationInfo, CSVUploadResult,
   CampaignMetrics, LeadMetrics, Integration
 } from '../types';
 import { API_ENDPOINTS } from '../constants';
+import { isDemoMode, mockApi } from './mockApi';
 
-// Base API configuration
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+// Base API configuration - Updated for Vite
+const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 const API_VERSION = 'v1';
 
 class ApiError extends Error {
@@ -126,193 +127,517 @@ class HttpClient {
 // Initialize HTTP client
 const httpClient = new HttpClient(API_BASE_URL);
 
-// Authentication API
+// Authentication API with demo mode support
 export const authApi = {
-  login: (email: string, password: string) =>
-    httpClient.post<{ user: User; token: string }>('/auth/login', { email, password }),
-  
-  register: (userData: Partial<User>) =>
-    httpClient.post<{ user: User; token: string }>('/auth/register', userData),
-  
-  logout: () =>
-    httpClient.post<void>('/auth/logout'),
-  
-  refreshToken: () =>
-    httpClient.post<{ token: string }>('/auth/refresh'),
-  
-  forgotPassword: (email: string) =>
-    httpClient.post<void>('/auth/forgot-password', { email }),
-  
-  resetPassword: (token: string, password: string) =>
-    httpClient.post<void>('/auth/reset-password', { token, password }),
-  
-  verifyEmail: (token: string) =>
-    httpClient.post<void>('/auth/verify-email', { token }),
+  login: (email: string, password: string) => {
+    if (isDemoMode()) {
+      return mockApi.auth.login(email, password);
+    }
+    return httpClient.post<{ user: User; token: string }>('/auth/login', { email, password });
+  },
 
-  validateToken: () =>
-    httpClient.get<{ user: User }>('/auth/validate'),
+  register: (userData: Partial<User>) => {
+    if (isDemoMode()) {
+      return mockApi.auth.register(userData);
+    }
+    return httpClient.post<{ user: User; token: string }>('/auth/register', userData);
+  },
+
+  logout: () => {
+    if (isDemoMode()) {
+      return mockApi.auth.logout();
+    }
+    return httpClient.post<void>('/auth/logout');
+  },
+
+  refreshToken: () => {
+    if (isDemoMode()) {
+      // In demo mode, just return a mock token
+      return Promise.resolve({ token: 'demo-refresh-token-' + Date.now() });
+    }
+    return httpClient.post<{ token: string }>('/auth/refresh');
+  },
+
+  forgotPassword: (email: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.post<void>('/auth/forgot-password', { email });
+  },
+
+  resetPassword: (token: string, password: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.post<void>('/auth/reset-password', { token, password });
+  },
+
+  verifyEmail: (token: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.post<void>('/auth/verify-email', { token });
+  },
+
+  validateToken: () => {
+    if (isDemoMode()) {
+      return mockApi.auth.validateToken();
+    }
+    return httpClient.get<{ user: User }>('/auth/validate');
+  },
 };
 
-// User API
+// User API with demo mode support
 export const userApi = {
-  getProfile: () =>
-    httpClient.get<User>('/user/profile'),
-  
-  updateProfile: (userData: Partial<User>) =>
-    httpClient.patch<User>('/user/profile', userData),
-  
-  updatePassword: (currentPassword: string, newPassword: string) =>
-    httpClient.patch<void>('/user/password', { currentPassword, newPassword }),
-  
-  deleteAccount: () =>
-    httpClient.delete<void>('/user/account'),
+  getProfile: () => {
+    if (isDemoMode()) {
+      return mockApi.user.getProfile();
+    }
+    return httpClient.get<User>('/user/profile');
+  },
+
+  updateProfile: (userData: Partial<User>) => {
+    if (isDemoMode()) {
+      return mockApi.user.updateProfile(userData);
+    }
+    return httpClient.patch<User>('/user/profile', userData);
+  },
+
+  updatePassword: (currentPassword: string, newPassword: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.patch<void>('/user/password', { currentPassword, newPassword });
+  },
+
+  deleteAccount: () => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.delete<void>('/user/account');
+  },
 };
 
-// Leads API
+// Leads API with demo mode support
 export const leadsApi = {
-  getLeads: (filters?: SearchFilters, pagination?: Partial<PaginationInfo>) =>
-    httpClient.get<{ leads: Lead[]; pagination: PaginationInfo }>('/leads', {
+  getLeads: (filters?: SearchFilters, pagination?: Partial<PaginationInfo>) => {
+    if (isDemoMode()) {
+      return mockApi.leads.getLeads(filters, pagination);
+    }
+    return httpClient.get<{ leads: Lead[]; pagination: PaginationInfo }>('/leads', {
       ...filters,
       ...pagination,
-    }),
-  
-  getLead: (id: string) =>
-    httpClient.get<Lead>(`/leads/${id}`),
-  
-  createLead: (leadData: Partial<Lead>) =>
-    httpClient.post<Lead>('/leads', leadData),
-  
-  updateLead: (id: string, leadData: Partial<Lead>) =>
-    httpClient.patch<Lead>(`/leads/${id}`, leadData),
-  
-  deleteLead: (id: string) =>
-    httpClient.delete<void>(`/leads/${id}`),
-  
-  bulkDeleteLeads: (ids: string[]) =>
-    httpClient.post<void>('/leads/bulk-delete', { ids }),
-  
+    });
+  },
+
+  getLead: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.leads.getLead(id);
+    }
+    return httpClient.get<Lead>(`/leads/${id}`);
+  },
+
+  createLead: (leadData: Partial<Lead>) => {
+    if (isDemoMode()) {
+      return mockApi.leads.createLead(leadData);
+    }
+    return httpClient.post<Lead>('/leads', leadData);
+  },
+
+  updateLead: (id: string, leadData: Partial<Lead>) => {
+    if (isDemoMode()) {
+      // Mock update - just return the updated lead
+      return mockApi.leads.getLead(id).then(lead => ({ ...lead, ...leadData }));
+    }
+    return httpClient.patch<Lead>(`/leads/${id}`, leadData);
+  },
+
+  deleteLead: (id: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.delete<void>(`/leads/${id}`);
+  },
+
+  bulkDeleteLeads: (ids: string[]) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.post<void>('/leads/bulk-delete', { ids });
+  },
+
   uploadLeads: (file: File) => {
+    if (isDemoMode()) {
+      return Promise.resolve({
+        success: true,
+        imported: 25,
+        failed: 0,
+        errors: []
+      } as CSVUploadResult);
+    }
     const formData = new FormData();
     formData.append('file', file);
     return httpClient.upload<CSVUploadResult>('/leads/upload', formData);
   },
-  
-  enrichLead: (id: string) =>
-    httpClient.post<Lead>(`/leads/${id}/enrich`),
-  
-  bulkEnrichLeads: (ids: string[]) =>
-    httpClient.post<{ results: Lead[] }>('/leads/bulk-enrich', { ids }),
-  
-  importFromLinkedIn: (url: string) =>
-    httpClient.post<Lead>('/leads/import/linkedin', { url }),
-  
-  exportLeads: (filters?: SearchFilters) =>
-    httpClient.get<Blob>('/leads/export', filters),
+
+  enrichLead: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.leads.getLead(id);
+    }
+    return httpClient.post<Lead>(`/leads/${id}/enrich`);
+  },
+
+  bulkEnrichLeads: (ids: string[]) => {
+    if (isDemoMode()) {
+      return Promise.resolve({ results: [] });
+    }
+    return httpClient.post<{ results: Lead[] }>('/leads/bulk-enrich', { ids });
+  },
+
+  importFromLinkedIn: (url: string) => {
+    if (isDemoMode()) {
+      return mockApi.leads.createLead({
+        firstName: 'LinkedIn',
+        lastName: 'Import',
+        email: 'linkedin.import@example.com',
+        company: 'LinkedIn Corp',
+        source: 'linkedin'
+      });
+    }
+    return httpClient.post<Lead>('/leads/import/linkedin', { url });
+  },
+
+  exportLeads: (filters?: SearchFilters) => {
+    if (isDemoMode()) {
+      return Promise.resolve(new Blob(['Demo CSV data'], { type: 'text/csv' }));
+    }
+    return httpClient.get<Blob>('/leads/export', filters);
+  },
 };
 
-// Campaigns API
+// Campaigns API with demo mode support
 export const campaignsApi = {
-  getCampaigns: (filters?: SearchFilters, pagination?: Partial<PaginationInfo>) =>
-    httpClient.get<{ campaigns: Campaign[]; pagination: PaginationInfo }>('/campaigns', {
+  getCampaigns: (filters?: SearchFilters, pagination?: Partial<PaginationInfo>) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaigns();
+    }
+    return httpClient.get<{ campaigns: Campaign[]; pagination: PaginationInfo }>('/campaigns', {
       ...filters,
       ...pagination,
-    }),
-  
-  getCampaign: (id: string) =>
-    httpClient.get<Campaign>(`/campaigns/${id}`),
-  
-  createCampaign: (campaignData: Partial<Campaign>) =>
-    httpClient.post<Campaign>('/campaigns', campaignData),
-  
-  updateCampaign: (id: string, campaignData: Partial<Campaign>) =>
-    httpClient.patch<Campaign>(`/campaigns/${id}`, campaignData),
-  
-  deleteCampaign: (id: string) =>
-    httpClient.delete<void>(`/campaigns/${id}`),
-  
-  duplicateCampaign: (id: string) =>
-    httpClient.post<Campaign>(`/campaigns/${id}/duplicate`),
-  
-  startCampaign: (id: string) =>
-    httpClient.post<Campaign>(`/campaigns/${id}/start`),
-  
-  pauseCampaign: (id: string) =>
-    httpClient.post<Campaign>(`/campaigns/${id}/pause`),
-  
-  stopCampaign: (id: string) =>
-    httpClient.post<Campaign>(`/campaigns/${id}/stop`),
-  
-  getCampaignMetrics: (id: string) =>
-    httpClient.get<CampaignMetrics>(`/campaigns/${id}/metrics`),
-  
-  getCampaignLeads: (id: string, pagination?: Partial<PaginationInfo>) =>
-    httpClient.get<{ leads: Lead[]; pagination: PaginationInfo }>(`/campaigns/${id}/leads`, pagination),
+    });
+  },
+
+  getCampaign: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id);
+    }
+    return httpClient.get<Campaign>(`/campaigns/${id}`);
+  },
+
+  createCampaign: (campaignData: Partial<Campaign>) => {
+    if (isDemoMode()) {
+      const newCampaign: Campaign = {
+        id: 'campaign-' + Date.now(),
+        name: campaignData.name || 'New Campaign',
+        description: campaignData.description || '',
+        status: 'draft',
+        type: campaignData.type || 'email',
+        templateId: campaignData.templateId || '',
+        leadIds: [],
+        settings: {
+          sendTime: '09:00',
+          timezone: 'America/New_York',
+          dailyLimit: 50,
+          followUpDelay: 3
+        },
+        metrics: {
+          sent: 0,
+          delivered: 0,
+          opened: 0,
+          clicked: 0,
+          replied: 0,
+          bounced: 0
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        startedAt: null,
+        endedAt: null,
+        ...campaignData
+      } as Campaign;
+      return Promise.resolve(newCampaign);
+    }
+    return httpClient.post<Campaign>('/campaigns', campaignData);
+  },
+
+  updateCampaign: (id: string, campaignData: Partial<Campaign>) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id).then(campaign => ({ ...campaign, ...campaignData }));
+    }
+    return httpClient.patch<Campaign>(`/campaigns/${id}`, campaignData);
+  },
+
+  deleteCampaign: (id: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.delete<void>(`/campaigns/${id}`);
+  },
+
+  duplicateCampaign: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id).then(campaign => ({
+        ...campaign,
+        id: 'campaign-' + Date.now(),
+        name: campaign.name + ' (Copy)',
+        status: 'draft' as const
+      }));
+    }
+    return httpClient.post<Campaign>(`/campaigns/${id}/duplicate`);
+  },
+
+  startCampaign: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id).then(campaign => ({
+        ...campaign,
+        status: 'active' as const,
+        startedAt: new Date().toISOString()
+      }));
+    }
+    return httpClient.post<Campaign>(`/campaigns/${id}/start`);
+  },
+
+  pauseCampaign: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id).then(campaign => ({
+        ...campaign,
+        status: 'paused' as const
+      }));
+    }
+    return httpClient.post<Campaign>(`/campaigns/${id}/pause`);
+  },
+
+  stopCampaign: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id).then(campaign => ({
+        ...campaign,
+        status: 'stopped' as const,
+        endedAt: new Date().toISOString()
+      }));
+    }
+    return httpClient.post<Campaign>(`/campaigns/${id}/stop`);
+  },
+
+  getCampaignMetrics: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(id).then(campaign => campaign.metrics);
+    }
+    return httpClient.get<CampaignMetrics>(`/campaigns/${id}/metrics`);
+  },
+
+  getCampaignLeads: (id: string, pagination?: Partial<PaginationInfo>) => {
+    if (isDemoMode()) {
+      return mockApi.leads.getLeads();
+    }
+    return httpClient.get<{ leads: Lead[]; pagination: PaginationInfo }>(`/campaigns/${id}/leads`, pagination);
+  },
 };
 
-// Email Templates API
+// Email Templates API with demo mode support
 export const templatesApi = {
-  getTemplates: (filters?: SearchFilters, pagination?: Partial<PaginationInfo>) =>
-    httpClient.get<{ templates: EmailTemplate[]; pagination: PaginationInfo }>('/templates', {
+  getTemplates: (filters?: SearchFilters, pagination?: Partial<PaginationInfo>) => {
+    if (isDemoMode()) {
+      return mockApi.templates.getTemplates();
+    }
+    return httpClient.get<{ templates: EmailTemplate[]; pagination: PaginationInfo }>('/templates', {
       ...filters,
       ...pagination,
-    }),
-  
-  getTemplate: (id: string) =>
-    httpClient.get<EmailTemplate>(`/templates/${id}`),
-  
-  createTemplate: (templateData: Partial<EmailTemplate>) =>
-    httpClient.post<EmailTemplate>('/templates', templateData),
-  
-  updateTemplate: (id: string, templateData: Partial<EmailTemplate>) =>
-    httpClient.patch<EmailTemplate>(`/templates/${id}`, templateData),
-  
-  deleteTemplate: (id: string) =>
-    httpClient.delete<void>(`/templates/${id}`),
-  
-  duplicateTemplate: (id: string) =>
-    httpClient.post<EmailTemplate>(`/templates/${id}/duplicate`),
-  
-  previewTemplate: (id: string, variables: Record<string, string>) =>
-    httpClient.post<{ subject: string; content: string }>(`/templates/${id}/preview`, { variables }),
+    });
+  },
+
+  getTemplate: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.templates.getTemplates().then(result => {
+        const template = result.templates.find(t => t.id === id);
+        if (!template) throw new Error('Template not found');
+        return template;
+      });
+    }
+    return httpClient.get<EmailTemplate>(`/templates/${id}`);
+  },
+
+  createTemplate: (templateData: Partial<EmailTemplate>) => {
+    if (isDemoMode()) {
+      const newTemplate: EmailTemplate = {
+        id: 'template-' + Date.now(),
+        name: templateData.name || 'New Template',
+        subject: templateData.subject || '',
+        content: templateData.content || '',
+        variables: templateData.variables || [],
+        category: templateData.category || 'general',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        usageCount: 0,
+        ...templateData
+      } as EmailTemplate;
+      return Promise.resolve(newTemplate);
+    }
+    return httpClient.post<EmailTemplate>('/templates', templateData);
+  },
+
+  updateTemplate: (id: string, templateData: Partial<EmailTemplate>) => {
+    if (isDemoMode()) {
+      return templatesApi.getTemplate(id).then(template => ({ ...template, ...templateData }));
+    }
+    return httpClient.patch<EmailTemplate>(`/templates/${id}`, templateData);
+  },
+
+  deleteTemplate: (id: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.delete<void>(`/templates/${id}`);
+  },
+
+  duplicateTemplate: (id: string) => {
+    if (isDemoMode()) {
+      return templatesApi.getTemplate(id).then(template => ({
+        ...template,
+        id: 'template-' + Date.now(),
+        name: template.name + ' (Copy)'
+      }));
+    }
+    return httpClient.post<EmailTemplate>(`/templates/${id}/duplicate`);
+  },
+
+  previewTemplate: (id: string, variables: Record<string, string>) => {
+    if (isDemoMode()) {
+      return templatesApi.getTemplate(id).then(template => {
+        let subject = template.subject;
+        let content = template.content;
+
+        // Replace variables in template
+        Object.entries(variables).forEach(([key, value]) => {
+          const regex = new RegExp(`{{${key}}}`, 'g');
+          subject = subject.replace(regex, value);
+          content = content.replace(regex, value);
+        });
+
+        return { subject, content };
+      });
+    }
+    return httpClient.post<{ subject: string; content: string }>(`/templates/${id}/preview`, { variables });
+  },
 };
 
-// Analytics API
+// Analytics API with demo mode support
 export const analyticsApi = {
-  getOverview: (timeRange?: string) =>
-    httpClient.get<AnalyticsData>('/analytics/overview', { timeRange }),
-  
-  getCampaignAnalytics: (campaignId: string, timeRange?: string) =>
-    httpClient.get<CampaignMetrics>(`/analytics/campaigns/${campaignId}`, { timeRange }),
-  
-  getLeadAnalytics: (timeRange?: string) =>
-    httpClient.get<LeadMetrics>('/analytics/leads', { timeRange }),
-  
-  exportReport: (type: string, timeRange?: string) =>
-    httpClient.get<Blob>('/analytics/export', { type, timeRange }),
+  getOverview: (timeRange?: string) => {
+    if (isDemoMode()) {
+      return mockApi.analytics.getOverview();
+    }
+    return httpClient.get<AnalyticsData>('/analytics/overview', { timeRange });
+  },
+
+  getCampaignAnalytics: (campaignId: string, timeRange?: string) => {
+    if (isDemoMode()) {
+      return mockApi.campaigns.getCampaign(campaignId).then(campaign => campaign.metrics);
+    }
+    return httpClient.get<CampaignMetrics>(`/analytics/campaigns/${campaignId}`, { timeRange });
+  },
+
+  getLeadAnalytics: (timeRange?: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve({
+        totalLeads: 1247,
+        newLeads: 45,
+        qualifiedLeads: 123,
+        conversionRate: 12.5,
+        averageScore: 78,
+        topSources: [
+          { source: 'LinkedIn', count: 567 },
+          { source: 'Website', count: 234 },
+          { source: 'Referral', count: 156 }
+        ]
+      } as LeadMetrics);
+    }
+    return httpClient.get<LeadMetrics>('/analytics/leads', { timeRange });
+  },
+
+  exportReport: (type: string, timeRange?: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve(new Blob(['Demo analytics report'], { type: 'text/csv' }));
+    }
+    return httpClient.get<Blob>('/analytics/export', { type, timeRange });
+  },
 };
 
-// Integrations API
+// Integrations API with demo mode support
 export const integrationsApi = {
-  getIntegrations: () =>
-    httpClient.get<Integration[]>('/integrations'),
-  
-  getIntegration: (id: string) =>
-    httpClient.get<Integration>(`/integrations/${id}`),
-  
-  createIntegration: (integrationData: Partial<Integration>) =>
-    httpClient.post<Integration>('/integrations', integrationData),
-  
-  updateIntegration: (id: string, integrationData: Partial<Integration>) =>
-    httpClient.patch<Integration>(`/integrations/${id}`, integrationData),
-  
-  deleteIntegration: (id: string) =>
-    httpClient.delete<void>(`/integrations/${id}`),
-  
-  testIntegration: (id: string) =>
-    httpClient.post<{ success: boolean; message: string }>(`/integrations/${id}/test`),
-  
-  syncIntegration: (id: string) =>
-    httpClient.post<void>(`/integrations/${id}/sync`),
+  getIntegrations: () => {
+    if (isDemoMode()) {
+      return mockApi.integrations.getIntegrations();
+    }
+    return httpClient.get<Integration[]>('/integrations');
+  },
+
+  getIntegration: (id: string) => {
+    if (isDemoMode()) {
+      return mockApi.integrations.getIntegrations().then(integrations => {
+        const integration = integrations.find(i => i.id === id);
+        if (!integration) throw new Error('Integration not found');
+        return integration;
+      });
+    }
+    return httpClient.get<Integration>(`/integrations/${id}`);
+  },
+
+  createIntegration: (integrationData: Partial<Integration>) => {
+    if (isDemoMode()) {
+      const newIntegration: Integration = {
+        id: 'integration-' + Date.now(),
+        name: integrationData.name || 'New Integration',
+        type: integrationData.type || 'crm',
+        status: 'disconnected',
+        description: integrationData.description || '',
+        config: {},
+        lastSyncAt: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...integrationData
+      } as Integration;
+      return Promise.resolve(newIntegration);
+    }
+    return httpClient.post<Integration>('/integrations', integrationData);
+  },
+
+  updateIntegration: (id: string, integrationData: Partial<Integration>) => {
+    if (isDemoMode()) {
+      return integrationsApi.getIntegration(id).then(integration => ({ ...integration, ...integrationData }));
+    }
+    return httpClient.patch<Integration>(`/integrations/${id}`, integrationData);
+  },
+
+  deleteIntegration: (id: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.delete<void>(`/integrations/${id}`);
+  },
+
+  testIntegration: (id: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve({ success: true, message: 'Demo integration test successful' });
+    }
+    return httpClient.post<{ success: boolean; message: string }>(`/integrations/${id}/test`);
+  },
+
+  syncIntegration: (id: string) => {
+    if (isDemoMode()) {
+      return Promise.resolve();
+    }
+    return httpClient.post<void>(`/integrations/${id}/sync`);
+  },
 };
 
 // Export all APIs

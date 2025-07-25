@@ -11,6 +11,7 @@ import { EmailTemplates } from './components/pages/EmailTemplates';
 import { Settings } from './components/pages/Settings';
 import { Research } from './components/pages/Research';
 import { NotificationContainer } from './components/ui/NotificationContainer';
+import { DemoBanner } from './components/ui/DemoBanner';
 import type { Page } from './types';
 
 const AppContent: React.FC = () => {
@@ -49,6 +50,7 @@ const AppContent: React.FC = () => {
         <div className={`flex-1 flex flex-col transition-all duration-300 ${state.sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
           <Header />
           <main className="flex-1 p-6">
+            <DemoBanner />
             {renderPage()}
           </main>
         </div>
