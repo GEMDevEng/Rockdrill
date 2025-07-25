@@ -1,0 +1,245 @@
+{
+  "project": "Rockdrill",
+  "version": "1.0.0",
+  "testingFramework": {
+    "backend": {
+      "framework": "pytest",
+      "version": "^7.4.0",
+      "plugins": [
+        "pytest-cov",
+        "pytest-mock",
+        "pytest-asyncio",
+        "httpx"
+      ],
+      "coverage": {
+        "minimum": 80,
+        "target": 90,
+        "exclude": [
+          "*/migrations/*",
+          "*/venv/*",
+          "*/tests/*",
+          "*/__pycache__/*"
+        ]
+      }
+    },
+    "frontend": {
+      "framework": "vitest",
+      "version": "^1.0.0",
+      "testingLibrary": "@testing-library/react",
+      "coverage": {
+        "minimum": 80,
+        "target": 90,
+        "exclude": [
+          "node_modules/",
+          "dist/",
+          "coverage/",
+          "**/*.d.ts",
+          "**/*.config.*"
+        ]
+      }
+    },
+    "e2e": {
+      "framework": "cypress",
+      "version": "^13.0.0",
+      "browser": "chrome",
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      }
+    }
+  },
+  "testEnvironments": {
+    "development": {
+      "backend": {
+        "database": "sqlite:///./test.db",
+        "apiUrl": "http://localhost:8000",
+        "secretKey": "dev-secret-key"
+      },
+      "frontend": {
+        "apiUrl": "http://localhost:8000/api/v1",
+        "baseUrl": "http://localhost:5173"
+      }
+    },
+    "ci": {
+      "backend": {
+        "database": "postgresql://postgres:postgres@localhost:5432/rockdrill_test",
+        "apiUrl": "http://localhost:8000",
+        "secretKey": "ci-secret-key"
+      },
+      "frontend": {
+        "apiUrl": "http://localhost:8000/api/v1",
+        "baseUrl": "http://localhost:5173"
+      }
+    },
+    "staging": {
+      "backend": {
+        "database": "${STAGING_DATABASE_URL}",
+        "apiUrl": "https://api-staging.rockdrill.com",
+        "secretKey": "${STAGING_SECRET_KEY}"
+      },
+      "frontend": {
+        "apiUrl": "https://api-staging.rockdrill.com/api/v1",
+        "baseUrl": "https://staging.rockdrill.com"
+      }
+    }
+  },
+  "testData": {
+    "users": {
+      "testUser": {
+        "email": "test@example.com",
+        "password": "password123",
+        "fullName": "Test User",
+        "company": "Test Company"
+      },
+      "adminUser": {
+        "email": "admin@example.com",
+        "password": "admin123",
+        "fullName": "Admin User",
+        "company": "Admin Company",
+        "role": "ADMIN"
+      }
+    },
+    "leads": {
+      "sampleLead": {
+        "email": "lead@example.com",
+        "firstName": "John",
+        "lastName": "Doe",
+        "company": "Example Corp",
+        "title": "CEO",
+        "phone": "+1234567890",
+        "linkedinUrl": "https://linkedin.com/in/johndoe",
+        "website": "https://example.com"
+      }
+    },
+    "campaigns": {
+      "emailCampaign": {
+        "name": "Test Email Campaign",
+        "description": "A test email campaign",
+        "type": "EMAIL",
+        "status": "DRAFT"
+      },
+      "linkedinCampaign": {
+        "name": "Test LinkedIn Campaign",
+        "description": "A test LinkedIn campaign",
+        "type": "LINKEDIN",
+        "status": "DRAFT"
+      }
+    }
+  },
+  "testSuites": {
+    "unit": {
+      "backend": [
+        "tests/test_models.py",
+        "tests/test_services.py"
+      ],
+      "frontend": [
+        "tests/components/ui/",
+        "tests/components/auth/"
+      ]
+    },
+    "integration": [
+      "backend/tests/test_integration_api.py",
+      "tests/integration/api-integration.test.tsx"
+    ],
+    "e2e": [
+      "cypress/e2e/auth.cy.ts",
+      "cypress/e2e/lead-management.cy.ts",
+      "cypress/e2e/campaign-management.cy.ts"
+    ],
+    "smoke": [
+      "cypress/e2e/auth.cy.ts::should allow user to login",
+      "cypress/e2e/lead-management.cy.ts::should display list of leads",
+      "cypress/e2e/campaign-management.cy.ts::should display list of campaigns"
+    ]
+  },
+  "testSchedule": {
+    "unit": {
+      "trigger": "on_commit",
+      "timeout": "5m"
+    },
+    "integration": {
+      "trigger": "on_pr",
+      "timeout": "10m"
+    },
+    "e2e": {
+      "trigger": "on_merge",
+      "timeout": "20m"
+    },
+    "smoke": {
+      "trigger": "nightly",
+      "schedule": "0 2 * * *",
+      "timeout": "15m"
+    }
+  },
+  "reporting": {
+    "coverage": {
+      "formats": ["html", "xml", "json"],
+      "outputDir": "coverage/",
+      "thresholds": {
+        "statements": 80,
+        "branches": 80,
+        "functions": 80,
+        "lines": 80
+      }
+    },
+    "testResults": {
+      "formats": ["junit", "json"],
+      "outputDir": "test-results/"
+    },
+    "notifications": {
+      "slack": {
+        "enabled": true,
+        "webhook": "${SLACK_WEBHOOK_URL}",
+        "channels": ["#dev-alerts", "#qa-reports"]
+      },
+      "email": {
+        "enabled": false,
+        "recipients": ["dev-team@rockdrill.com"]
+      }
+    }
+  },
+  "performance": {
+    "parallel": {
+      "backend": true,
+      "frontend": true,
+      "maxWorkers": 4
+    },
+    "cache": {
+      "enabled": true,
+      "dependencies": true,
+      "testResults": true
+    },
+    "optimization": {
+      "skipUnchanged": true,
+      "incrementalTesting": true
+    }
+  },
+  "debugging": {
+    "verbose": false,
+    "screenshots": {
+      "onFailure": true,
+      "onSuccess": false
+    },
+    "videos": {
+      "enabled": false,
+      "onFailure": true
+    },
+    "logs": {
+      "level": "info",
+      "output": "test-logs/"
+    }
+  },
+  "maintenance": {
+    "cleanup": {
+      "testData": true,
+      "tempFiles": true,
+      "oldReports": true,
+      "retentionDays": 30
+    },
+    "updates": {
+      "dependencies": "weekly",
+      "testData": "monthly",
+      "documentation": "quarterly"
+    }
+  }
+}
