@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save, Eye, Zap } from 'lucide-react';
 import { Button } from './Button';
+import { EMAIL_PLACEHOLDERS } from '../../constants';
 
 interface TemplateEditorProps {
   onClose: () => void;
@@ -10,17 +11,6 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ onClose }) => {
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-
-  const placeholders = [
-    '{{lead_name}}',
-    '{{company_name}}',
-    '{{job_title}}',
-    '{{industry}}',
-    '{{company_news}}',
-    '{{mutual_connection}}',
-    '{{recent_funding}}',
-    '{{company_size}}'
-  ];
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
@@ -92,7 +82,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({ onClose }) => {
               <div>
                 <h3 className="font-medium text-gray-900 mb-3">Available Placeholders</h3>
                 <div className="space-y-2">
-                  {placeholders.map((placeholder, index) => (
+                  {EMAIL_PLACEHOLDERS.map((placeholder, index) => (
                     <button
                       key={index}
                       onClick={() => setBody(body + ' ' + placeholder)}

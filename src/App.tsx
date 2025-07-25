@@ -8,8 +8,7 @@ import { Analytics } from './components/pages/Analytics';
 import { EmailTemplates } from './components/pages/EmailTemplates';
 import { Settings } from './components/pages/Settings';
 import { Research } from './components/pages/Research';
-
-type Page = 'dashboard' | 'leads' | 'campaigns' | 'analytics' | 'templates' | 'settings' | 'research';
+import type { Page } from './types';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
