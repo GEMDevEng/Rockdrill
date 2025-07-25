@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "rockdrill",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
@@ -19,9 +20,29 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "VITE_ENVIRONMENT": "production",
+    "VITE_ENABLE_ANALYTICS": "true",
+    "VITE_ENABLE_AI_FEATURES": "true"
   }
 }
