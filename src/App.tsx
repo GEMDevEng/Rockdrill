@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { AppProvider, useApp } from './contexts/AppContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Dashboard } from './components/pages/Dashboard';
@@ -8,11 +10,12 @@ import { Analytics } from './components/pages/Analytics';
 import { EmailTemplates } from './components/pages/EmailTemplates';
 import { Settings } from './components/pages/Settings';
 import { Research } from './components/pages/Research';
+import { NotificationContainer } from './components/ui/NotificationContainer';
 import type { Page } from './types';
 
-function App() {
+const AppContent: React.FC = () => {
+  const { state } = useApp();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -36,23 +39,30 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <Sidebar 
-        currentPage={currentPage} 
-        setCurrentPage={setCurrentPage}
-        isOpen={sidebarOpen}
-        setIsOpen={setSidebarOpen}
-      />
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
-        <Header 
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
+    <ProtectedRoute requireAuth={true}>
+      <div className="min-h-screen bg-gray-50 flex">
+        <Sidebar
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          isOpen={state.sidebarOpen}
         />
-        <main className="flex-1 p-6">
-          {renderPage()}
-        </main>
+        <div className={`flex-1 flex flex-col transition-all duration-300 ${state.sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
+          <Header />
+          <main className="flex-1 p-6">
+            {renderPage()}
+          </main>
+        </div>
+        <NotificationContainer />
       </div>
-    </div>
+    </ProtectedRoute>
+  );
+};
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
   );
 }
 

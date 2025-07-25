@@ -1,22 +1,22 @@
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Mail, 
-  BarChart3, 
-  FileText, 
+import {
+  LayoutDashboard,
+  Users,
+  Mail,
+  BarChart3,
+  FileText,
   Settings,
   Search,
   Menu,
   X
 } from 'lucide-react';
 import { Logo } from '../ui/Logo';
+import { useApp } from '../../contexts/AppContext';
 
 interface SidebarProps {
   currentPage: string;
   setCurrentPage: (page: string) => void;
   isOpen: boolean;
-  setIsOpen: (open: boolean) => void;
 }
 
 const menuItems = [
@@ -29,19 +29,19 @@ const menuItems = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export const Sidebar: React.FC<SidebarProps> = ({ 
-  currentPage, 
-  setCurrentPage, 
-  isOpen, 
-  setIsOpen 
+export const Sidebar: React.FC<SidebarProps> = ({
+  currentPage,
+  setCurrentPage,
+  isOpen
 }) => {
+  const { dispatch } = useApp();
   return (
     <>
       {/* Mobile overlay */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={() => dispatch({ type: 'SET_SIDEBAR_OPEN', payload: false })}
         />
       )}
       
@@ -52,8 +52,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <Logo />
           <button
-            onClick={() => setIsOpen(false)}
+            type="button"
+            onClick={() => dispatch({ type: 'SET_SIDEBAR_OPEN', payload: false })}
             className="lg:hidden p-2 rounded-md hover:bg-gray-100 transition-colors"
+            aria-label="Close sidebar"
           >
             <X className="h-5 w-5 text-gray-500" />
           </button>
@@ -66,10 +68,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
             
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => {
                   setCurrentPage(item.id);
-                  setIsOpen(false);
+                  dispatch({ type: 'SET_SIDEBAR_OPEN', payload: false });
                 }}
                 className={`w-full flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                   isActive
