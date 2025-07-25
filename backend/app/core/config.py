@@ -1,9 +1,17 @@
-from typing import List, Optional
-from pydantic import validator
+import os
+from typing import List, Optional, Union
+from pydantic import validator, Field
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load environment-specific .env file
+env = os.getenv("ENVIRONMENT", "development")
+if env == "production":
+    load_dotenv(".env.production")
+elif env == "staging":
+    load_dotenv(".env.staging")
+else:
+    load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -11,35 +19,44 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Rockdrill API"
     PROJECT_VERSION: str = "1.0.0"
-    DEBUG: bool = True
-    ENVIRONMENT: str = "development"
+    DEBUG: bool = Field(default=True, description="Enable debug mode")
+    ENVIRONMENT: str = Field(default="development", description="Environment: development, staging, production")
+    LOG_LEVEL: str = Field(default="INFO", description="Logging level")
     
     # Database Configuration
-    DATABASE_URL: str = "sqlite:///./rockdrill.db"
-    DATABASE_HOST: str = "localhost"
-    DATABASE_PORT: int = 5432
-    DATABASE_NAME: str = "rockdrill_db"
-    DATABASE_USER: str = "rockdrill_user"
-    DATABASE_PASSWORD: str = "rockdrill_password"
-    
+    DATABASE_URL: str = Field(
+        default="sqlite:///./rockdrill.db",
+        description="Database connection URL"
+    )
+
     # Redis Configuration
-    REDIS_URL: str = "redis://localhost:6379/0"
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_DB: int = 0
-    
+    REDIS_URL: str = Field(
+        default="redis://localhost:6379/0",
+        description="Redis connection URL"
+    )
+
     # JWT Configuration
-    SECRET_KEY: str = "your-super-secret-jwt-key-change-this-in-production"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
-    
+    SECRET_KEY: str = Field(
+        default="your-super-secret-jwt-key-change-this-in-production",
+        description="JWT secret key - MUST be changed in production"
+    )
+    ALGORITHM: str = Field(default="HS256", description="JWT algorithm")
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=30, description="Access token expiration in minutes"
+    )
+    REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
+        default=7, description="Refresh token expiration in days"
+    )
+
     # CORS Configuration
-    BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://rockdrill-rnzl5r01q-gem-devs-projects.vercel.app"
-    ]
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = Field(
+        default=[
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "https://rockdrill-348vi04cd-gem-devs-projects.vercel.app"
+        ],
+        description="Allowed CORS origins"
+    )
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v):
